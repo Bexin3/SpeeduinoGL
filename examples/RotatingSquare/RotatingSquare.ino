@@ -15,11 +15,6 @@ float rotation = 0;
   {0, 479},
   {799, 0},
   {799, 479}};
-  Square sq2 = {
-  {0, 0},
-  {0, 479},
-  {799, 0},
-  {799, 479}};
 
 float angle = 0;
 // The buffer used to rotate and resize the frame
