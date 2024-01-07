@@ -23,7 +23,7 @@ struct Square {
   Point C;
 };
 
-void ConfigBuffer(long address, uint ResolutionV);
+void ConfigBuffer(long address = 0x60000000, uint ResolutionV = 480, uint ResolutionH = 800);
 void FillTriangle(Triangle triangle, uint16_t Colour);
 void FillSquare(Square square, uint16_t Colour);
 void PolarizedTwoLineRasterizer(int CellStartX, int CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour, bool Polarity);
