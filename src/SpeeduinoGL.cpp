@@ -3,10 +3,12 @@
 
 long ImageAddress = 0x60000000;
 uint ResV = 480;
+uint ResH = 800;
 
-void ConfigBuffer(long address, uint ResolutionV) {
+void ConfigBuffer(long address, uint ResolutionV, uint ResolutionH) {
 ResV = ResolutionV;
 ImageAddress = address;
+    ResH = ResolutionH;
 }
 
 
@@ -113,11 +115,26 @@ void PolarizedTwoLineRasterizer(int CellStartX, int CellEndX, float PointerCoord
 void TwoLineRasterizer(int CellStartX, int CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour) {
 
 uint16_t *ImageBuffer = (uint16_t *)ImageAddress;
+    
+    if (CellStartX<0) {
+        PointerCoordinateH -= Gradient2 * CellStartX;
+        PointerEndH -= Gradient1 * CellStartX;
+        CellStartX = 0;
+    };
+      
+      
+  if (CellEndX > ResH) {
+      CellEndX = ResH;
+  };
 
   for (uint CurrentW = CellStartX; CellEndX > CurrentW; CurrentW++) {
 
-    int PointerCoorInt = ceil(PointerCoordinateH);
-    int PointerEndInt = ceil(PointerEndH);
+    uint PointerCoorInt = ceil(PointerCoordinateH);
+    uint PointerEndInt = ceil(PointerEndH);
+      
+      if (PointerEndInt>ResV) {
+          PointerEndInt = ResV;
+      };
 
     for (int CurrentH = PointerCoorInt; PointerEndInt > CurrentH; CurrentH++) {
       ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
@@ -130,4 +147,3 @@ uint16_t *ImageBuffer = (uint16_t *)ImageAddress;
 
 
 }
-
