@@ -12,7 +12,7 @@ Camera cam(ov767x);
 
 
 FrameBuffer outfb(SDRAM_START_ADDRESS);
-uint16_t *FrameBuffer = (uint16_t *)SDRAM_START_ADDRESS; //Manual pointer
+uint16_t *FrameBuffer = (uint16_t *)SDRAM_START_ADDRESS;
 const int ResH = 480;
 float rotation = 0;
 
@@ -36,10 +36,10 @@ struct Square {
 
   Triangle myT = { { 200, 50 }, { 150, 150 }, { 200, 150 } };
   Square sq1 = {
-  {200, 400},
-  {250, 150},
-  {600, 300},
-  {600, 400}};
+  {1, 1},
+  {1, 479},
+  {799, 1},
+  {799, 479}};
   Square sq2 = {{700, 200}, {700, 250}, {100, 100}, {200, 150}};
 
 float angle = 0;
@@ -76,11 +76,22 @@ void loop() {
   angle += 0.01;
 
   sq1 = {
-  {400 + 50 * (- cos(angle) + sin(angle)), 240 + 50 * (cos(angle) + sin(angle))},
-  {400 + 50 * (- cos(angle) - sin(angle)), 240 + 50 * (- cos(angle) + sin(angle))},
-  {400 + 50 * (+ cos(angle) - sin(angle)), 240 + 50 * (- cos(angle) - sin(angle))},
-  {400 + 50 * (+ cos(angle) + sin(angle)), 240 + 50 * (cos(angle) - sin(angle))}};
+  {400 + 150 * (- cos(angle) + sin(angle)), 240 + 150 * (cos(angle) + sin(angle))},
+  {400 + 150 * (- cos(angle) - sin(angle)), 240 + 150 * (- cos(angle) + sin(angle))},
+  {400 + 150 * (+ cos(angle) - sin(angle)), 240 + 150 * (- cos(angle) - sin(angle))},
+  {400 + 150 * (+ cos(angle) + sin(angle)), 240 + 150 * (cos(angle) - sin(angle))}};
 
+
+  
+
+delay(100);
+ /* sq1 = {
+  {byte(rand()), byte(rand())},
+  {byte(rand()), byte(rand())},
+  {byte(rand()), byte(rand())},
+  {byte(rand()), byte(rand())}};
+delay(100);
+*/
   for (int i = 0; i < 800; i++) {
     for (int j = 0; j < 480; j++) {
 
@@ -102,6 +113,7 @@ FillSquare(sq1, 0x00FF);
   Serial.println(micros() - t1);
   dsi_lcdDrawImage((void *)outfb.getBuffer(), (void *)dsi_getCurrentFrameBuffer(), 480, 800, DMA2D_INPUT_RGB565);
   dsi_drawCurrentFrameBuffer();
+
 
 }
 
@@ -132,11 +144,11 @@ void FillTriangle(Triangle triangle, uint16_t Colour) {
 
 
   if (triangle.B.h > triangle.C.h || triangle.A.w == triangle.B.w) {
-    TwoLineRasterizer(dAwBw, triangle.A.h + gradAC * (ceil(triangle.A.w) - triangle.A.w), triangle.A.h + gradAB * (ceil(triangle.A.w) - triangle.A.w), gradAB, gradAC, triangle.A.w, 0, Colour);
-    TwoLineRasterizer(dBwCw, triangle.A.h + gradAC * (floor(triangle.B.w) - triangle.A.w), triangle.B.h + gradBC * (ceil(triangle.B.w) - triangle.B.w), gradBC, gradAC, triangle.B.w, 0, Colour);
+    TwoLineRasterizer(dAwBw, triangle.A.h + gradAC * (ceil(triangle.A.w) - triangle.A.w), triangle.A.h + gradAB * (ceil(triangle.A.w) - triangle.A.w), gradAB, gradAC, ceil(triangle.A.w), 0, Colour);
+    TwoLineRasterizer(dBwCw, triangle.A.h + gradAC * (ceil(triangle.B.w) - triangle.A.w), triangle.B.h + gradBC * (ceil(triangle.B.w) - triangle.B.w), gradBC, gradAC, ceil(triangle.B.w), 0, Colour);
   } else {
-    TwoLineRasterizer(dAwBw, triangle.A.h + gradAB * (ceil(triangle.A.w) - triangle.A.w), triangle.A.h + gradAC * (ceil(triangle.A.w) - triangle.A.w), gradAC, gradAB, triangle.A.w, 0, Colour);
-    TwoLineRasterizer(dBwCw, triangle.B.h + gradBC * (ceil(triangle.B.w) - triangle.B.w), triangle.A.h + gradAC * (floor(triangle.B.w) - triangle.A.w), gradAC, gradBC, triangle.B.w, 0, Colour);
+    TwoLineRasterizer(dAwBw, triangle.A.h + gradAB * (ceil(triangle.A.w) - triangle.A.w), triangle.A.h + gradAC * (ceil(triangle.A.w) - triangle.A.w), gradAC, gradAB, ceil(triangle.A.w), 0, Colour);
+    TwoLineRasterizer(dBwCw, triangle.B.h + gradBC * (ceil(triangle.B.w) - triangle.B.w), triangle.A.h + gradAC * (ceil(triangle.B.w) - triangle.A.w), gradAC, gradBC, ceil(triangle.B.w), 0, Colour);
   };
 
   //TwoLineRasterizer(50, 166, 300, -1, -0.3333, triangle.B.w, 0, Colour);
@@ -153,49 +165,89 @@ void FillSquare(Square square, uint16_t Colour) {
     return a.w < b.w;
   });
 
-
-  if (square.A.w == square.B.w) {
-    if ((square.A.h > square.B.h && square.C.h < square.D.h) || (square.A.h < square.B.h && square.C.h > square.D.h)) {
-      std::swap(square.A.h, square.B.h);
-
  
+  int dAwBw = int(square.B.w) - int(square.A.w);
+  int dBwDw = int(square.D.w) - int(square.B.w);
+  int dDwCw = int(square.C.w) - int(square.D.w);
+
+
+  float gradAC = (square.C.h - square.A.h) / (square.C.w - square.A.w);
+  float gradBD = (square.B.h - square.D.h) / (square.B.w - square.D.w);
+
+
+bool testcase = 0;
+   float gradAD = (square.D.h - square.A.h) / (square.D.w - square.A.w);
+  float gradAB = (square.B.h - square.A.h) / (square.B.w - square.A.w);
+  float gradBC = (square.C.h - square.B.h) / (square.C.w - square.B.w);
+   float gradDC = (square.C.h - square.D.h) / (square.C.w - square.D.w);
+
+Serial.println(square.A.h);
+Serial.println(square.B.h);
+Serial.println(square.C.h);
+Serial.println(square.D.h);
+
+
+
+  if (gradAD>gradAB) {
+  if (gradAC>gradAD) {
+std::swap(square.C, square.D);
+testcase = 1;
   };
+  } else {
+  if (gradAC<gradAD) {
+std::swap(square.C, square.D);
+testcase = 1;
   };
- 
+  }
+
+Serial.println(square.A.h);
+Serial.println(square.B.h);
+Serial.println(square.C.h);
+Serial.println(square.D.h);
+
+   gradAD = (square.D.h - square.A.h) / (square.D.w - square.A.w);
+   gradAB = (square.B.h - square.A.h) / (square.B.w - square.A.w);
+   gradBC = (square.C.h - square.B.h) / (square.C.w - square.B.w);
+   gradDC = (square.C.h - square.D.h) / (square.C.w - square.D.w);
 
 
-  int dAwBw = floor(square.B.w) - ceil(square.A.w);
-  int dBwDw = floor(square.D.w) - ceil(square.B.w);
-  int dDwCw = floor(square.C.w) - ceil(square.D.w);
-
-
-  float gradAD = (square.A.h - square.D.h) / (square.A.w - square.D.w);
-  float gradAB = (square.A.h - square.B.h) / (square.A.w - square.B.w);
-  float gradBC = (square.B.h - square.C.h) / (square.B.w - square.C.w);
-  float gradDC = (square.D.h - square.C.h) / (square.D.w - square.C.w);
-
-
-//Replace grad AD reuse code if possible
-//Try to go wide if theres a split low gradient triangle middle point
-
-  if (square.B.h > square.D.h) {
-    TwoLineRasterizer(dAwBw, square.A.h + gradAD * (ceil(square.A.w) - square.A.w), square.A.h + gradAB * (ceil(square.A.w) - square.A.w), gradAB, gradAD, square.A.w, 0, 0xF00F);
+if (!testcase) {
+  if ((gradAB > gradAD)) {
+    TwoLineRasterizer(dAwBw, square.A.h + gradAD * (ceil(square.A.w) - square.A.w), square.A.h + gradAB * (ceil(square.A.w) - square.A.w), gradAB, gradAD, ceil(square.A.w), 0, 0xF00F);
     
-    TwoLineRasterizer(dBwDw, square.A.h + gradAD * (floor(square.B.w) - square.A.w), square.B.h + gradBC * (ceil(square.B.w) - square.B.w), gradBC, gradAD, square.B.w, 0, 0xFF0F);
+    TwoLineRasterizer(dBwDw, square.A.h + gradAD * (ceil(square.B.w) - square.A.w), square.B.h + gradBC * (ceil(square.B.w) - square.B.w), gradBC, gradAD, ceil(square.B.w), 0, 0xFF0F);
 
-    TwoLineRasterizer(dDwCw, square.A.h + gradAD * (floor(square.D.w) - square.A.w), square.B.h + gradBC * (ceil(square.D.w) - square.B.w), gradBC, gradDC, square.D.w, 0, 0x0FFF);
+    TwoLineRasterizer(dDwCw, square.D.h + gradDC * (ceil(square.D.w) - square.D.w), square.B.h + gradBC * (ceil(square.D.w) - square.B.w), gradBC, gradDC, ceil(square.D.w), 0, 0x0FFF);
 
   } else {
 
-    TwoLineRasterizer(dAwBw, square.A.h + gradAB * (ceil(square.A.w) - square.A.w), square.A.h + gradAD * (ceil(square.A.w) - square.A.w), gradAD, gradAB, square.A.w, 0, 0xF00F);
+    TwoLineRasterizer(dAwBw, square.A.h + gradAB * (ceil(square.A.w) - square.A.w), square.A.h + gradAD * (ceil(square.A.w) - square.A.w), gradAD, gradAB, ceil(square.A.w), 0, 0xF00F);
     
-    TwoLineRasterizer(dBwDw, square.B.h + gradBC * (ceil(square.B.w) - square.B.w), square.A.h + gradAD * (floor(square.B.w) - square.A.w), gradAD, gradBC, square.B.w, 0, 0xFF0F);
+    TwoLineRasterizer(dBwDw, square.B.h + gradBC * (ceil(square.B.w) - square.B.w), square.A.h + gradAD * (ceil(square.B.w) - square.A.w), gradAD, gradBC, ceil(square.B.w), 0, 0xFF0F);
 
-    TwoLineRasterizer(dDwCw, square.B.h + gradBC * (ceil(square.D.w) - square.B.w), square.A.h + gradAD * (floor(square.D.w) - square.A.w), gradDC, gradBC, square.D.w, 0, 0x0FFF);
+    TwoLineRasterizer(dDwCw, square.B.h + gradBC * (ceil(square.D.w) - square.B.w), square.D.h + gradDC * (ceil(square.D.w) - square.D.w), gradDC, gradBC, ceil(square.D.w), 0, 0x0FFF);
 
   };
+} else {
+  if (gradAB > gradAD) {
+    TwoLineRasterizer(dAwBw, square.A.h + gradAD * (ceil(square.A.w) - square.A.w), square.A.h + gradAB * (ceil(square.A.w) - square.A.w), gradAB, gradAD, ceil(square.A.w), 0, 0xF00F);
+    
+    TwoLineRasterizer(dBwDw, square.A.h + gradAD * (ceil(square.B.w) - square.A.w), square.B.h + gradBC * (ceil(square.B.w) - square.B.w), gradBC, gradAD, ceil(square.B.w), 0, 0xFF0F);
 
+    TwoLineRasterizer(dDwCw, square.A.h + gradAD * (ceil(square.C.w) - square.A.w), square.C.h + gradDC * (ceil(square.C.w) - square.C.w), gradDC, gradAD, ceil(square.C.w), 0, 0x0FFF);
+
+  } else {
+
+    TwoLineRasterizer(dAwBw, square.A.h + gradAB * (ceil(square.A.w) - square.A.w), square.A.h + gradAD * (ceil(square.A.w) - square.A.w), gradAD, gradAB, ceil(square.A.w), 0, 0xF00F);
+    
+    TwoLineRasterizer(dBwDw, square.B.h + gradBC * (ceil(square.B.w) - square.B.w), square.A.h + gradAD * (ceil(square.B.w) - square.A.w), gradAD, gradBC, ceil(square.B.w), 0, 0xFF0F);
+
+    TwoLineRasterizer(dDwCw, square.C.h + gradDC * (ceil(square.C.w) - square.C.w), square.A.h + gradAD * (ceil(square.C.w) - square.A.w), gradAD, gradDC, ceil(square.C.w), 0, 0x0FFF);
+  };
+
+};
   //TwoLineRasterizer(50, 166, 300, -1, -0.3333, square.B.w, 0, Colour);
+  Serial.println((gradAB > gradAD));
 }
 
 
@@ -204,8 +256,8 @@ void TwoLineRasterizer(int CellSizeX, float PointerCoordinateH, float PointerEnd
 
   for (uint CurrentW = 0; CellSizeX > CurrentW; CurrentW++) {
 
-    int PointerCoorInt = PointerCoordinateH;
-    int PointerEndInt = PointerEndH;
+    int PointerCoorInt = ceil(PointerCoordinateH);
+    int PointerEndInt = ceil(PointerEndH);
 
     for (int CurrentH = PointerCoorInt; PointerEndInt > CurrentH; CurrentH++) {
       FrameBuffer[ResH * (CurrentW + pointerToCellW) + (CurrentH + pointerToCellH)] = Colour;
@@ -215,4 +267,6 @@ void TwoLineRasterizer(int CellSizeX, float PointerCoordinateH, float PointerEnd
     PointerCoordinateH += Gradient2;
     PointerEndH += Gradient1;
   };
+
+
 }
