@@ -37,7 +37,7 @@ void setup() {
   dsi_drawCurrentFrameBuffer();
   dsi_lcdClear(0);
   dsi_drawCurrentFrameBuffer();
-
+  ConfigBuffer(SDRAM_START_ADDRESS, ResV);
 
 
 }
@@ -45,8 +45,9 @@ void setup() {
 void loop() {
 
 
-  ConfigBuffer(SDRAM_START_ADDRESS, ResV);
+
   // put your main code here, to run repeatedly:
+FillSquare(sq1, 0x0986);
 
   angle += 0.01;
 
@@ -61,7 +62,7 @@ void loop() {
   long t1 = micros();
                                                              
 
-FillSquare(sq2, 0x0986);
+
 FillSquare(sq1, 0x00FF);
 
 
@@ -71,3 +72,4 @@ FillSquare(sq1, 0x00FF);
 
 
 }
+
