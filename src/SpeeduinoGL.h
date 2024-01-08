@@ -1,8 +1,9 @@
-#pragma once
+#ifndef SpeeduinoGL_h
+#define SpeeduinoGL_h
 
 #include <Arduino.h>
 
-// TODO: make this a class
+
 namespace SpeeduinoGL {
   struct Point {
     float w;
@@ -26,7 +27,7 @@ namespace SpeeduinoGL {
   void FillTriangle(Triangle triangle, uint16_t Colour);
   void FillSquare(Square square, uint16_t Colour);
 
-  // TODO: remove if not meant for use outside library
   void PolarizedTwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour, bool Polarity);
   void TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour);
-}
+
+#endif
