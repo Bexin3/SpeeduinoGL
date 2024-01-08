@@ -6,7 +6,7 @@
 uint16_t* FrameBuffer = (uint16_t*)SDRAM_START_ADDRESS;
 const int ResV = 480;
 
-SpeeduinoGL::Square sq1 = {
+Square sq1 = {
   {0, 0},
   {0, 480},
   {800, 0},
@@ -27,11 +27,11 @@ void setup() {
   dsi_lcdClear(0);
   dsi_drawCurrentFrameBuffer();
 
-  SpeeduinoGL::ConfigBuffer(SDRAM_START_ADDRESS, ResV);
+  ConfigBuffer(SDRAM_START_ADDRESS, ResV);
 }
 
 void loop() {
-  SpeeduinoGL::FillSquare(sq1, 0x0986);
+  FillSquare(sq1, 0x0986);
 
   angle += 0.01;
 
@@ -43,7 +43,7 @@ void loop() {
   };
 
   int32_t t1 = micros();                                   
-  SpeeduinoGL::FillSquare(sq1, 0x00FF);
+  FillSquare(sq1, 0x00FF);
   Serial.println(micros() - t1);
 
   dsi_lcdDrawImage((void *)FrameBuffer, (void *)dsi_getCurrentFrameBuffer(), 480, 800, DMA2D_INPUT_RGB565);
