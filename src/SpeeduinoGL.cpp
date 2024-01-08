@@ -156,7 +156,7 @@ uint32_t ResH = 800;
          
          
          float height = sqrt(RadiusTo2 - pow(RadiusPos, 2));
-         uint16_t PointerCoorInt = floor(Centre.h - height + 1);
+         uint16_t PointerCoorInt = ceil(Centre.h - height);
          uint16_t PointerEndInt = ceil(Centre.h + height);
          
          
