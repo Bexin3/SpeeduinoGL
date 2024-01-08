@@ -6,7 +6,7 @@
 uint16_t* FrameBuffer = (uint16_t*)SDRAM_START_ADDRESS;
 const int ResV = 480;
 
-Square sq1 = {
+Rectangle sq1 = {
   {0, 0},
   {0, 480},
   {800, 0},
@@ -31,7 +31,7 @@ void setup() {
 }
 
 void loop() {
-  FillSquare(sq1, 0x0986);
+  FillRectangle(sq1, 0x0986);
 
   angle += 0.01;
 
@@ -42,8 +42,8 @@ void loop() {
     {400 + 150 * (cos(angle)  + sin(angle)),  240 + 150 * (cos(angle)  - sin(angle)) }
   };
 
-  int32_t t1 = micros();                                   
-  FillSquare(sq1, 0x00FF);
+  int32_t t1 = micros();
+  FillRectangle(sq1, 0x00FF);
   Serial.println(micros() - t1);
 
   dsi_lcdDrawImage((void *)FrameBuffer, (void *)dsi_getCurrentFrameBuffer(), 480, 800, DMA2D_INPUT_RGB565);
