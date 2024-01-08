@@ -25,7 +25,7 @@ void setup() {
   dsi_lcdClear(0);
   dsi_drawCurrentFrameBuffer();
   dsi_lcdClear(0);
-  dsi_drawCurrentFrameBuffer(); // why is this ran twice?
+  dsi_drawCurrentFrameBuffer();
 
   SpeeduinoGL::ConfigBuffer(SDRAM_START_ADDRESS, ResV);
 }
@@ -33,7 +33,7 @@ void setup() {
 void loop() {
   SpeeduinoGL::FillSquare(sq1, 0x0986);
 
-  angle += 0.01; // TODO: use clock, this is not constant speed and is microcontroller-dependent at the least
+  angle += 0.01;
 
   sq1 = {
     {400 + 150 * (-cos(angle) + sin(angle)),  240 + 150 * (cos(angle)  + sin(angle)) },
