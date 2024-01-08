@@ -8,9 +8,9 @@ const int ResV = 480;
 
 SpeeduinoGL::Square sq1 = {
   {0, 0},
-  {0, 479},
-  {799, 0},
-  {799, 479}
+  {0, 480},
+  {800, 0},
+  {800, 480}
 };
 
 float angle = 0;
