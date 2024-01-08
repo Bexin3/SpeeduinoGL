@@ -37,9 +37,9 @@ uint32_t ResH = 800;
                               gradBC, gradAC, Colour, Polarized);
   }
 
-  void FillSquare(Square square, uint16_t Colour) {
+  void FillRectangle(Rectangle rectangle, uint16_t Colour) {
     // Sort points based on x-coordinates
-    std::sort(&square.A, &square.C + 1,
+    std::sort(&rectangle.A, &rectangle.C + 1,
       [](const Point &a, const Point &b) {
         return a.w < b.w;
       }
@@ -48,53 +48,53 @@ uint32_t ResH = 800;
     bool switched = false;
     bool Polarized = false;
 
-    float gradAC = (square.C.h - square.A.h) / (square.C.w - square.A.w);
-    float gradAD = (square.D.h - square.A.h) / (square.D.w - square.A.w);
-    float gradAB = (square.B.h - square.A.h) / (square.B.w - square.A.w);
+    float gradAC = (rectangle.C.h - rectangle.A.h) / (rectangle.C.w - rectangle.A.w);
+    float gradAD = (rectangle.D.h - rectangle.A.h) / (rectangle.D.w - rectangle.A.w);
+    float gradAB = (rectangle.B.h - rectangle.A.h) / (rectangle.B.w - rectangle.A.w);
 
     if (gradAD > gradAB) {
       if (gradAC > gradAD) {
-        std::swap(square.C, square.D);
+        std::swap(rectangle.C, rectangle.D);
         std::swap(gradAC, gradAD);
         switched = true;
       }
     } else {
       if (gradAC < gradAD) {
-        std::swap(square.C, square.D);
+        std::swap(rectangle.C, rectangle.D);
         std::swap(gradAC, gradAD);
         switched = true;
       }
     }
 
-    float gradBC = (square.C.h - square.B.h) / (square.C.w - square.B.w);
-    float gradDC = (square.C.h - square.D.h) / (square.C.w - square.D.w);
+    float gradBC = (rectangle.C.h - rectangle.B.h) / (rectangle.C.w - rectangle.B.w);
+    float gradDC = (rectangle.C.h - rectangle.D.h) / (rectangle.C.w - rectangle.D.w);
 
     Polarized = gradAB > gradAD;
 
-    PolarizedTwoLineRasterizer(ceil(square.A.w), ceil(square.B.w),
-                              square.A.h + gradAD * (ceil(square.A.w) - square.A.w),
-                              square.A.h + gradAB * (ceil(square.A.w) - square.A.w),
+    PolarizedTwoLineRasterizer(ceil(rectangle.A.w), ceil(rectangle.B.w),
+                              rectangle.A.h + gradAD * (ceil(rectangle.A.w) - rectangle.A.w),
+                              rectangle.A.h + gradAB * (ceil(rectangle.A.w) - rectangle.A.w),
                               gradAB, gradAD, Colour, Polarized);
 
     if (switched) {
-      PolarizedTwoLineRasterizer(ceil(square.B.w), ceil(square.C.w), 
-                                square.A.h + gradAD * (ceil(square.B.w) - square.A.w),
-                                square.B.h + gradBC * (ceil(square.B.w) - square.B.w),
+      PolarizedTwoLineRasterizer(ceil(rectangle.B.w), ceil(rectangle.C.w), 
+                                rectangle.A.h + gradAD * (ceil(rectangle.B.w) - rectangle.A.w),
+                                rectangle.B.h + gradBC * (ceil(rectangle.B.w) - rectangle.B.w),
                                 gradBC, gradAD, Colour, Polarized);
 
-      PolarizedTwoLineRasterizer(ceil(square.C.w), ceil(square.D.w),
-                                square.A.h + gradAD * (ceil(square.C.w) - square.A.w),
-                                square.C.h + gradDC * (ceil(square.C.w) - square.C.w),
+      PolarizedTwoLineRasterizer(ceil(rectangle.C.w), ceil(rectangle.D.w),
+                                rectangle.A.h + gradAD * (ceil(rectangle.C.w) - rectangle.A.w),
+                                rectangle.C.h + gradDC * (ceil(rectangle.C.w) - rectangle.C.w),
                                 gradDC, gradAD, Colour, Polarized);
     } else {
-      PolarizedTwoLineRasterizer(ceil(square.B.w), ceil(square.D.w),
-                                square.A.h + gradAD * (ceil(square.B.w) - square.A.w),
-                                square.B.h + gradBC * (ceil(square.B.w) - square.B.w),
+      PolarizedTwoLineRasterizer(ceil(rectangle.B.w), ceil(rectangle.D.w),
+                                rectangle.A.h + gradAD * (ceil(rectangle.B.w) - rectangle.A.w),
+                                rectangle.B.h + gradBC * (ceil(rectangle.B.w) - rectangle.B.w),
                                 gradBC, gradAD, Colour, Polarized);
 
-      PolarizedTwoLineRasterizer(ceil(square.D.w), ceil(square.C.w),
-                                square.D.h + gradDC * (ceil(square.D.w) - square.D.w),
-                                square.B.h + gradBC * (ceil(square.D.w) - square.B.w),
+      PolarizedTwoLineRasterizer(ceil(rectangle.D.w), ceil(rectangle.C.w),
+                                rectangle.D.h + gradDC * (ceil(rectangle.D.w) - rectangle.D.w),
+                                rectangle.B.h + gradBC * (ceil(rectangle.D.w) - rectangle.B.w),
                                 gradBC, gradDC, Colour, Polarized);
     }
   }
@@ -114,7 +114,6 @@ uint32_t ResH = 800;
     if (CellStartX < 0) {
         PointerCoordinateH -= Gradient2 * CellStartX;
         PointerEndH -= Gradient1 * CellStartX;
-        CellStartX = 0;
     }
        
     if (CellEndX > ResH) {
@@ -138,3 +137,40 @@ uint32_t ResH = 800;
     }
   }
 
+    void FillCircle(float Radius, uint16_t Colour, Point Centre) {
+      uint16_t* ImageBuffer = (uint16_t*)ImageAddress;
+     
+      float RadiusTo2 = pow(Radius, 2);
+     
+      uint32_t CellEndX = ceil(Centre.w+Radius);
+     
+      if (CellEndX > ResH) {
+         CellEndX = ResH;
+      };
+     
+      uint32_t CellStartX = ceil(Centre.w-Radius);
+      float RadiusPos = CellStartX-(Centre.w);
+     
+     
+      for (uint32_t CurrentW = CellStartX; CellEndX > CurrentW; CurrentW++) {
+         
+         
+         float height = sqrt(RadiusTo2 - pow(RadiusPos, 2));
+         uint16_t PointerCoorInt = floor(Centre.h - height + 1);
+         uint16_t PointerEndInt = ceil(Centre.h + height);
+         
+         
+         
+        if (PointerEndInt > ResV) {
+          PointerEndInt = ResV;
+        }
+
+        for (int32_t CurrentH = PointerCoorInt; (PointerEndInt) > CurrentH; CurrentH++) {
+         ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
+        };
+         
+        RadiusPos++;
+
+     }
+    }
+     

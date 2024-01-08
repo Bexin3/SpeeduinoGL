@@ -14,7 +14,7 @@
     Point C;
   };
 
-  struct Square {
+  struct Rectangle {
     Point A;
     Point B;
     Point D;
@@ -23,9 +23,10 @@
 
   void ConfigBuffer(uint32_t address = 0x60000000, uint32_t ResolutionV = 480, uint32_t ResolutionH = 800);
   void FillTriangle(Triangle triangle, uint16_t Colour);
-  void FillSquare(Square square, uint16_t Colour);
+  void FillRectangle(Rectangle rectangle, uint16_t Colour);
 
   void PolarizedTwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour, bool Polarity);
   void TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour);
+  void FillCircle(float Radius, uint16_t Colour, Point Centre);
 
 #endif
