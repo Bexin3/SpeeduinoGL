@@ -3,8 +3,6 @@
 
 #include <Arduino.h>
 
-
-namespace SpeeduinoGL {
   struct Point {
     float w;
     float h;
