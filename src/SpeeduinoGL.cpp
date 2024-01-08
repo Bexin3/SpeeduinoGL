@@ -5,7 +5,7 @@ uint32_t ImageAddress = 0x60000000;
 uint32_t ResV = 480;
 uint32_t ResH = 800;
 
-namespace SpeeduinoGL {
+
   void ConfigBuffer(uint32_t Address, uint32_t ResolutionV, uint32_t ResolutionH) {
     ResV = ResolutionV;
     ImageAddress = Address;
@@ -137,4 +137,4 @@ namespace SpeeduinoGL {
       PointerEndH += Gradient1;
     }
   }
-}
+
