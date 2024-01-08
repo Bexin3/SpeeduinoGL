@@ -1,9 +1,7 @@
 
 #ifndef SpeeduinoGL_h
 #define SpeeduinoGL_h
-
 #include <Arduino.h>
-
 
 struct Point {
   float w;
