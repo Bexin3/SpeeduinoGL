@@ -322,8 +322,16 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
                         return a.w < b.w;
                       });
 
-            if (square.A.w == square.B.w && square.A.h != square.D.h) {
-              std::swap(square.D.h, square.C.h);
+            if (square.A.w == square.B.w) {
+                if (Polarized == (square.A.h > square.B.h)) {
+                    std::swap(square.A.h, square.B.h);
+                }
+                
+                
+                if (square.A.h != square.D.h) {
+                  std::swap(square.D.h, square.C.h);
+                };
+                  
             };
 
 
