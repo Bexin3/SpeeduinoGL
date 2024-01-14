@@ -35,6 +35,8 @@ struct DoubleFloat {
   void FillTriangle(Triangle triangle, uint16_t Colour);
   void FillRectangle(Rectangle rectangle, uint16_t Colour);
 
+  void FillScreen(uint16_t Colour);
+
 DoubleFloat PolarizedTwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour, bool Polarity);
 DoubleFloat TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour);
   void FillCircle(float Radius, uint16_t Colour, Point Centre);

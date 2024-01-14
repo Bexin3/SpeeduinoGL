@@ -7,10 +7,6 @@ uint16_t* FrameBuffer = (uint16_t*)SDRAM_START_ADDRESS;
 const int ResV = 480;
 
 Rectangle sq1 = {
-  {0, 0},
-  {0, 480},
-  {800, 0},
-  {800, 480}
 };
 
 float angle = 0;
@@ -28,6 +24,8 @@ void setup() {
   dsi_drawCurrentFrameBuffer();
 
   ConfigBuffer(SDRAM_START_ADDRESS, ResV);
+  
+  FillScreen(0x0986);
 }
 
 void loop() {
