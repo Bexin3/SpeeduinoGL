@@ -274,7 +274,6 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
 
       if (sin(4 * rotationRad) <= 0) {
           Polarized = 1;
-          Serial.println("test");
         grad1 = gradient2 / gradient1;
         grad2 = -gradient1 / gradient2;
       } else {
