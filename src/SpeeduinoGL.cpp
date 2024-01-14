@@ -40,13 +40,16 @@ void FillScreen(uint16_t Colour) {
     
     bool Polarized = gradAB > gradAC;
 
+    DoubleFloat WouldWork =
     PolarizedTwoLineRasterizer(ceil(triangle.A.w), ceil(triangle.B.w),
                               triangle.A.h + gradAC * (ceil(triangle.A.w) - triangle.A.w),
                               triangle.A.h + gradAB * (ceil(triangle.A.w) - triangle.A.w),
                               gradAB, gradAC, Colour, Polarized);
 
+    if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
+      
     PolarizedTwoLineRasterizer(ceil(triangle.B.w), ceil(triangle.C.w),
-                              triangle.A.h + gradAC * (ceil(triangle.B.w) - triangle.A.w),
+                              WouldWork.Float2,
                               triangle.B.h + gradBC * (ceil(triangle.B.w) - triangle.B.w),
                               gradBC, gradAC, Colour, Polarized);
   }
@@ -286,10 +289,12 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
       float CellPointerH = ShiftH;
       float CellPointerV = ShiftV;
 
-      const float BoundStartH = 0 - zoom - abs(VShift);
-      const float BoundStartV = 0 - zoom - abs(HShift);
-      const float BoundEndH = ResH + zoom + abs(VShift);
-      const float BoundEndV = ResV + zoom + abs(HShift);
+    const float BoundStartH = 0 - zoom - abs(VShift);
+    const float BoundStartV = 0 - zoom - abs(HShift);
+    const float BoundEndH = ResH + zoom + abs(VShift);
+    const float BoundEndV = ResV + zoom + abs(HShift);
+    
+    bool RowsPassed = 0;
 
 
       for (int16_t PosH = 0; PosH < InputSizeH; PosH++) {
@@ -306,13 +311,16 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
         float CellPointerHU2 = CellPointerHU - HShift;
         float CellPointerVU2 = CellPointerVU + VShift;
 
+          bool BoundaryPassed = 0;
 
 
         for (int16_t PosV = 0; PosV < InputSizeV; PosV++) {
 
           if (CellPointerH <= BoundEndH && CellPointerV <= BoundEndV && CellPointerH >= BoundStartH && CellPointerV >= BoundStartV) {
-
-
+            
+              BoundaryPassed = 1;
+              RowsPassed = 1;
+              
 
             Rectangle square = {
               { CellPointerH, CellPointerV },
@@ -347,28 +355,32 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
                   
             };
               
+              DoubleFloat WouldWork =
+                PolarizedTwoLineRasterizer(ceil(square.A.w), ceil(square.B.w),
+                                           square.A.h + grad2 * (ceil(square.A.w) - square.A.w),
+                                           square.A.h + grad1 * (ceil(square.A.w) - square.A.w),
+                                           grad1, grad2, Colour, Polarized);
+
+              if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
+              WouldWork =
+                PolarizedTwoLineRasterizer(ceil(square.B.w), ceil(square.D.w),
+                                           WouldWork.Float2,
+                                           square.B.h + grad2 * (ceil(square.B.w) - square.B.w),
+                                           grad2, grad2, Colour, Polarized);
+
+              if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
+                PolarizedTwoLineRasterizer(ceil(square.D.w), ceil(square.C.w),
+                                           square.D.h + grad1 * (ceil(square.D.w) - square.D.w),
+                                           WouldWork.Float1,
+                                           grad2, grad1, Colour, Polarized);
+            
+          } else if (BoundaryPassed == 1) {
+              goto ByPassROLine;
+              
+          };
+            
             
 
-
-            DoubleFloat WouldWork =
-              PolarizedTwoLineRasterizer(ceil(square.A.w), ceil(square.B.w),
-                                         square.A.h + grad2 * (ceil(square.A.w) - square.A.w),
-                                         square.A.h + grad1 * (ceil(square.A.w) - square.A.w),
-                                         grad1, grad2, Colour, Polarized);
-
-            if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
-            WouldWork =
-              PolarizedTwoLineRasterizer(ceil(square.B.w), ceil(square.D.w),
-                                         WouldWork.Float2,
-                                         square.B.h + grad2 * (ceil(square.B.w) - square.B.w),
-                                         grad2, grad2, Colour, Polarized);
-
-            if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
-              PolarizedTwoLineRasterizer(ceil(square.D.w), ceil(square.C.w),
-                                         square.D.h + grad1 * (ceil(square.D.w) - square.D.w),
-                                         WouldWork.Float1,
-                                         grad2, grad1, Colour, Polarized);
-          };
 
           CellPointerH = CellPointerH2;
           CellPointerV = CellPointerV2;
@@ -382,8 +394,18 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
           CellPointerHU2 -= HShift;
           CellPointerVU2 += VShift;
         };
+          
+          if (!BoundaryPassed && RowsPassed) {
+              return void();
+          };
 
+      ByPassROLine:
+          
         CellPointerH = EOCPTRH;
         CellPointerV = EOCPTRV;
       };
+    
+
+
+    
     }
