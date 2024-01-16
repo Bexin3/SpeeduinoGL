@@ -42,7 +42,8 @@ DoubleFloat PolarizedTwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, flo
 __attribute__((always_inline))
 DoubleFloat TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour);
 
-  void FillCircle(float Radius, uint16_t Colour, Point Centre);
+
+void FillCircle(float Radius, uint16_t Colour, Point Centre);
 
 void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad);
 
