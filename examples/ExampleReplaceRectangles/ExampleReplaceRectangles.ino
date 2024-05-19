@@ -200,15 +200,12 @@ zoom = 1;
 rotation = 0;
 shifti = 400; //Horizontal
 shiftj = 240; //Vertical
+testRast = GetRasterData(0, 0, 1, 0, 800, 480);
+testRast2 = GetRasterData(0, 0, 1, 0, 0, 0);
+RectangleReplacement(testRast, testRast2, rand());
+testRast = testRast2;
 };
 
-if (contacts == 4 && PreviousContacts != 4) {
-if (pause == 0) {
-pause = 1;
-} else {
-pause = 0;
-};
-};
 
 //Serial.println(shiftj);
 //Serial.println(zoom);
