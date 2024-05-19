@@ -27,6 +27,18 @@ struct DoubleFloat {
     Point C;
   };
 
+struct RectangleRasterData {
+    int32_t RectangleStartX; int32_t RectangleEndX;
+    
+    int32_t RectangleBottomX; int32_t RectangleTopX;
+      
+    float RectangleFirstBottomY; float RectangleSecondBottomY;
+    float RectangleFirstBottomGradient; float RectangleSecondBottomGradient;
+
+    float RectangleFirstTopY; float RectangleSecondTopY;
+    float RectangleFirstTopGradient; float RectangleSecondTopGradient;
+};
+
 
 
 
@@ -42,9 +54,12 @@ DoubleFloat PolarizedTwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, flo
 __attribute__((always_inline))
 DoubleFloat TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour);
 
-
-void FillCircle(float Radius, uint16_t Colour, Point Centre);
+  void FillCircle(float Radius, uint16_t Colour, Point Centre);
 
 void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad);
+
+void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uint16_t Colour);
+
+RectangleRasterData GetRasterData(float ShiftH, float ShiftV, float zoom, float rotationRad, float InputH, float InputV);
 
 #endif
