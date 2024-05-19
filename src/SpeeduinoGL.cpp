@@ -34,9 +34,9 @@ void FillScreen(uint16_t Colour) {
       }
     );
 
-    float gradAC = (triangle.A.h - triangle.C.h) / (triangle.A.w - triangle.C.w);
-    float gradAB = (triangle.A.h - triangle.B.h) / (triangle.A.w - triangle.B.w);
-    float gradBC = (triangle.B.h - triangle.C.h) / (triangle.B.w - triangle.C.w);
+    float gradAC = (triangle.C.h - triangle.A.h) / (triangle.C.w - triangle.A.w);
+    float gradAB = (triangle.B.h - triangle.A.h) / (triangle.B.w - triangle.A.w);
+    float gradBC = (triangle.C.h - triangle.B.h) / (triangle.C.w - triangle.B.w);
     
     bool Polarized = gradAB > gradAC;
 
@@ -134,7 +134,6 @@ DoubleFloat PolarizedTwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, flo
       return(TwoLineRasterizer(CellStartX, CellEndX, PointerEndH, PointerCoordinateH, Gradient2, Gradient1, Colour));
     }
   }
-
 
 
 DoubleFloat TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float PointerCoordinateH, float PointerEndH, float Gradient1, float Gradient2, uint16_t Colour) {
@@ -269,30 +268,11 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
       float grad2;
 
 
-    
-    float offsetH1 = abs(VShift);
-    float offsetH2 = abs(HShift);
-    float offsetV1 = abs(VShift) + abs(HShift);
-    float offsetV2 = 0;
-    
-
-    
 
       bool Polarized = 0;
-    
-    
-    if (sin(rotationRad) <= 0) {
-        std::swap(offsetH1, offsetH2);
-        std::swap(offsetV1, offsetV2);
-        
-    };
-
 
       if (sin(2 * rotationRad) <= 0) {
         std::swap(gradient1, gradient2);
-          std::swap(offsetH2, offsetV1);
-          std::swap(offsetH1, offsetV2);
-          
       };
 
       if (sin(4 * rotationRad) <= 0) {
@@ -308,23 +288,11 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
 
       float CellPointerH = ShiftH;
       float CellPointerV = ShiftV;
-    
-    //rotationRad+=PI/4;
-    //zoom /= sqrt(2);
 
-    float BoundStartH = - offsetH1;
-    float BoundEndH = ResH + offsetH2;
-    float BoundStartV = - offsetV1;
-    float BoundEndV = ResV + offsetV2;
-   
-  //  float InsideStartH = -1 + offsetH2;
-   // float InsideEndH = ResH - offsetH1;
-   // float InsideStartV = -1 + offsetV2;
-  //  float InsideEndV = ResV - offsetV1;
-    
-    
-    
-
+    const float BoundStartH = 0 - zoom - abs(VShift);
+    const float BoundStartV = 0 - zoom - abs(HShift);
+    const float BoundEndH = ResH + zoom + abs(VShift);
+    const float BoundEndV = ResV + zoom + abs(HShift);
     
     bool RowsPassed = 0;
 
@@ -387,32 +355,25 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
                   
             };
               
-              
-      
-                  
-                  
-                  DoubleFloat WouldWork =
-                  PolarizedTwoLineRasterizer(ceil(square.A.w), ceil(square.B.w),
-                                             square.A.h + grad2 * (ceil(square.A.w) - square.A.w),
-                                             square.A.h + grad1 * (ceil(square.A.w) - square.A.w),
-                                             grad1, grad2, Colour, Polarized);
-                  
-                  if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
-                  WouldWork =
-                  PolarizedTwoLineRasterizer(ceil(square.B.w), ceil(square.D.w),
-                                             WouldWork.Float2,
-                                             square.B.h + grad2 * (ceil(square.B.w) - square.B.w),
-                                             grad2, grad2, Colour, Polarized);
-                  
-                  if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
-                  PolarizedTwoLineRasterizer(ceil(square.D.w), ceil(square.C.w),
-                                             square.D.h + grad1 * (ceil(square.D.w) - square.D.w),
-                                             WouldWork.Float1,
-                                             grad2, grad1, Colour, Polarized);
-                  
-                  
-              
-              
+              DoubleFloat WouldWork =
+                PolarizedTwoLineRasterizer(ceil(square.A.w), ceil(square.B.w),
+                                           square.A.h + grad2 * (ceil(square.A.w) - square.A.w),
+                                           square.A.h + grad1 * (ceil(square.A.w) - square.A.w),
+                                           grad1, grad2, Colour, Polarized);
+
+              if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
+              WouldWork =
+                PolarizedTwoLineRasterizer(ceil(square.B.w), ceil(square.D.w),
+                                           WouldWork.Float2,
+                                           square.B.h + grad2 * (ceil(square.B.w) - square.B.w),
+                                           grad2, grad2, Colour, Polarized);
+
+              if (Polarized) { std::swap(WouldWork.Float1, WouldWork.Float2); };
+                PolarizedTwoLineRasterizer(ceil(square.D.w), ceil(square.C.w),
+                                           square.D.h + grad1 * (ceil(square.D.w) - square.D.w),
+                                           WouldWork.Float1,
+                                           grad2, grad1, Colour, Polarized);
+            
           } else if (BoundaryPassed == 1) {
               goto ByPassROLine;
               
@@ -449,6 +410,372 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
     
     }
 
+
+
+
+
+void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uint16_t Colour) {
+//you might see !(Past.RectangleBottomX <= 0), yes its weird but it seems for some reason > for two signed numbers is currently broken for Giga R1 and causes issues when one number is negative.
+    
+    uint16_t* ImageBuffer = (uint16_t*)ImageAddress;
+
+    
+
+    if (Past.RectangleStartX < 0) {
+        if (Past.RectangleEndX < 0) {
+            goto returnpoint;
+        } else {
+            if (!(Past.RectangleBottomX <= 0)) {
+        Past.RectangleFirstBottomY -= Past.RectangleFirstBottomGradient * Past.RectangleStartX;
+            } else {
+        Past.RectangleSecondBottomY -= Past.RectangleSecondBottomGradient * Past.RectangleBottomX;
+                Past.RectangleBottomX = 0;
+            };
+            if (!(Past.RectangleTopX <= 0)) {
+        Past.RectangleFirstTopY -= Past.RectangleFirstTopGradient * Past.RectangleStartX;
+            } else {
+        Past.RectangleSecondTopY -= Past.RectangleSecondTopGradient * Past.RectangleTopX;
+                Past.RectangleTopX = 0;
+            }
+            Past.RectangleStartX = 0;
+        };
+    };
+    
+    
+    if (!(Past.RectangleStartX <= New.RectangleStartX) && !(New.RectangleEndX <= Past.RectangleStartX)) {
+
+            if (!(New.RectangleBottomX <= Past.RectangleStartX)) {
+        New.RectangleFirstBottomY -= New.RectangleFirstBottomGradient * (New.RectangleStartX-Past.RectangleStartX);
+            } else {
+        New.RectangleSecondBottomY -= New.RectangleSecondBottomGradient * (New.RectangleBottomX-Past.RectangleStartX);
+                New.RectangleBottomX = Past.RectangleStartX;
+            };
+            if (!(New.RectangleTopX <= Past.RectangleStartX)) {
+        New.RectangleFirstTopY -= New.RectangleFirstTopGradient * (New.RectangleStartX-Past.RectangleStartX);
+            } else {
+        New.RectangleSecondTopY -= New.RectangleSecondTopGradient * (New.RectangleTopX-Past.RectangleStartX);
+                New.RectangleTopX = Past.RectangleStartX;
+            }
+            New.RectangleStartX = Past.RectangleStartX;
+
+    };
+    
+    
+    if (New.RectangleStartX < Past.RectangleStartX) {
+        New.RectangleStartX = Past.RectangleStartX;
+    };
+    
+    
+    if (New.RectangleEndX < New.RectangleStartX) {
+        New.RectangleEndX = New.RectangleStartX;
+    };
+    
+
+    
+    
+    if (Past.RectangleEndX > ResH) {
+        Past.RectangleEndX = ResH;
+        if (Past.RectangleStartX > ResH) {
+            goto returnpoint;
+        };
+    };
+
+
+    if (Past.RectangleEndX < New.RectangleEndX) {
+        New.RectangleEndX = Past.RectangleEndX;
+    };
+    
+    if (New.RectangleEndX < New.RectangleStartX) {
+        New.RectangleStartX = New.RectangleEndX;
+    };
+
+    
+
+    
+    
+    
+for (uint32_t CurrentW = Past.RectangleStartX; New.RectangleStartX > CurrentW; CurrentW++) {
+
+    
+    int32_t PointerCoorInt;
+    int32_t PointerEndInt;
+    
+
+if (CurrentW<Past.RectangleBottomX) {
+      PointerCoorInt = ceil(Past.RectangleFirstBottomY);
+      Past.RectangleFirstBottomY += Past.RectangleFirstBottomGradient;
+} else {
+      PointerCoorInt = ceil(Past.RectangleSecondBottomY);
+      Past.RectangleSecondBottomY += Past.RectangleSecondBottomGradient;
+};
+
+if (CurrentW<Past.RectangleTopX) {
+      PointerEndInt = ceil(Past.RectangleFirstTopY);
+      Past.RectangleFirstTopY += Past.RectangleFirstTopGradient;
+} else {
+      PointerEndInt = ceil(Past.RectangleSecondTopY);
+      Past.RectangleSecondTopY += Past.RectangleSecondTopGradient;
+};
+
+
+    
+    
+    
+    if (PointerEndInt < 0) {
+      PointerEndInt = 0;
+    };
+    
+    if (PointerCoorInt < 0) {
+        PointerCoorInt = 0;
+    };
+
+
+    
+  if (PointerEndInt > ResV) {
+    PointerEndInt = ResV;
+  };
+    
+    if (PointerCoorInt > ResV) {
+        PointerCoorInt = ResV;
+    };
+    
+
+  for (uint32_t CurrentH = PointerCoorInt; PointerEndInt > CurrentH; CurrentH++) {
+    ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
+  };
+
+
+};
+
+    
+    
+    
+    
+    
+    
+    
+    
+    for (uint32_t CurrentW = New.RectangleStartX; New.RectangleEndX > CurrentW; CurrentW++) {
+
+      int32_t PointerCoorInt;
+      int32_t PointerEndInt;
+      int32_t SubCoorInt;
+      int32_t SubEndInt;
+
+  if (CurrentW<Past.RectangleBottomX) {
+        PointerCoorInt = ceil(Past.RectangleFirstBottomY);
+        Past.RectangleFirstBottomY += Past.RectangleFirstBottomGradient;
+  } else {
+        PointerCoorInt = ceil(Past.RectangleSecondBottomY);
+        Past.RectangleSecondBottomY += Past.RectangleSecondBottomGradient;
+  };
+
+  if (CurrentW<Past.RectangleTopX) {
+        PointerEndInt = ceil(Past.RectangleFirstTopY);
+        Past.RectangleFirstTopY += Past.RectangleFirstTopGradient;
+  } else {
+        PointerEndInt = ceil(Past.RectangleSecondTopY);
+        Past.RectangleSecondTopY += Past.RectangleSecondTopGradient;
+  };
+
+
+
+  if (CurrentW<New.RectangleBottomX) {
+        SubCoorInt = ceil(New.RectangleFirstBottomY);
+        New.RectangleFirstBottomY += New.RectangleFirstBottomGradient;
+  } else {
+       SubCoorInt = ceil(New.RectangleSecondBottomY);
+        New.RectangleSecondBottomY += New.RectangleSecondBottomGradient;
+  };
+
+  if (CurrentW<New.RectangleTopX) {
+        SubEndInt = ceil(New.RectangleFirstTopY);
+        New.RectangleFirstTopY += New.RectangleFirstTopGradient;
+  } else {
+        SubEndInt = ceil(New.RectangleSecondTopY);
+        New.RectangleSecondTopY += New.RectangleSecondTopGradient;
+  };
+        
+        
+        
+        if (PointerEndInt < 0) {
+          PointerEndInt = 0;
+        };
+        
+        if (PointerCoorInt < 0) {
+            PointerCoorInt = 0;
+        };
+
+        if (SubEndInt<0) {SubEndInt=0;};
+        if (SubCoorInt<0) {SubCoorInt=0;};
+
+        
+      if (PointerEndInt > ResV) {
+        PointerEndInt = ResV;
+      };
+        
+        if (PointerCoorInt > ResV) {
+            PointerCoorInt = ResV;
+        };
+        
+
+        bool State = 0;
+        if (SubEndInt>SubCoorInt) {
+            if (SubCoorInt<PointerEndInt && SubEndInt>PointerCoorInt) {
+                State = 1;
+            };
+
+    
+            
+        };
+        
+
+        
+        if (SubCoorInt>ResV) {
+            SubCoorInt=ResV;};
+
+  
+        if (SubEndInt>ResV) {SubEndInt=ResV;};
+
+
+                
+                if (State) {
+                    for (uint32_t CurrentH = PointerCoorInt; SubCoorInt > CurrentH; CurrentH++) {
+                        ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
+                    };
+                    for (uint32_t CurrentH = SubEndInt; PointerEndInt > CurrentH; CurrentH++) {
+                        ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
+                    };
+                } else {
+                    for (uint32_t CurrentH = PointerCoorInt; PointerEndInt > CurrentH; CurrentH++) {
+                        ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
+                    };
+                };
+                
+                
+     
+};
+    
+    
+    
+    
+    
+for (uint32_t CurrentW = New.RectangleEndX; Past.RectangleEndX > CurrentW; CurrentW++) {
+
+    
+    int32_t PointerCoorInt;
+    int32_t PointerEndInt;
+    
+
+if (CurrentW<Past.RectangleBottomX) {
+      PointerCoorInt = ceil(Past.RectangleFirstBottomY);
+      Past.RectangleFirstBottomY += Past.RectangleFirstBottomGradient;
+} else {
+      PointerCoorInt = ceil(Past.RectangleSecondBottomY);
+      Past.RectangleSecondBottomY += Past.RectangleSecondBottomGradient;
+};
+
+if (CurrentW<Past.RectangleTopX) {
+      PointerEndInt = ceil(Past.RectangleFirstTopY);
+      Past.RectangleFirstTopY += Past.RectangleFirstTopGradient;
+} else {
+      PointerEndInt = ceil(Past.RectangleSecondTopY);
+      Past.RectangleSecondTopY += Past.RectangleSecondTopGradient;
+};
+
+
+    
+    
+    
+    if (PointerEndInt < 0) {
+      PointerEndInt = 0;
+    };
+    
+    if (PointerCoorInt < 0) {
+        PointerCoorInt = 0;
+    };
+
+
+    
+  if (PointerEndInt > ResV) {
+    PointerEndInt = ResV;
+  };
+    
+    if (PointerCoorInt > ResV) {
+        PointerCoorInt = ResV;
+    };
+    
+
+  for (uint32_t CurrentH = PointerCoorInt; PointerEndInt > CurrentH; CurrentH++) {
+    ImageBuffer[ResV * (CurrentW) + (CurrentH)] = Colour;
+  };
+
+
+};
+
+    
+    
+    
+    returnpoint:
+    (1);
+
+  }
+
+
+RectangleRasterData GetRasterData(float ShiftH, float ShiftV, float zoom, float rotationRad, float InputH, float InputV) {
+    
+    RectangleRasterData RasterDataOutput;
+    
+    //A left start
+    //B top
+    //D bottom
+    //C right end
+    
+    Rectangle rectangle = {
+      { ShiftH, ShiftV },
+      { ShiftH + zoom*InputH*cos(rotationRad), ShiftV + zoom*InputH*sin(rotationRad)},
+      { ShiftH - zoom*InputV*sin(rotationRad), ShiftV + zoom*InputV*cos(rotationRad) },
+      { ShiftH + zoom*InputH*cos(rotationRad) - zoom*InputV*sin(rotationRad), ShiftV + zoom*InputH*sin(rotationRad) + zoom*InputV*cos(rotationRad)}
+    };
+    
+    //zoom*InputV*cos(rotationRad)+
+    
+    
+    //zoom*InputH*cos(rotationRad)
+    
+    std::sort(&rectangle.A, &rectangle.C + 1,
+      [](const Point &a, const Point &b) {
+        return a.w < b.w;
+      }
+    );
+    
+    if (rectangle.D.h>rectangle.B.h) {
+        std::swap(rectangle.D, rectangle.B);
+    };
+    
+
+    
+    RasterDataOutput.RectangleStartX = ceil(rectangle.A.w);
+    RasterDataOutput.RectangleEndX = ceil(rectangle.C.w);
+    RasterDataOutput.RectangleBottomX = ceil(rectangle.D.w);
+    RasterDataOutput.RectangleTopX = ceil(rectangle.B.w);
+    
+    RasterDataOutput.RectangleFirstBottomGradient=(rectangle.D.h-rectangle.A.h)/(rectangle.D.w-rectangle.A.w);
+    RasterDataOutput.RectangleSecondBottomGradient=(rectangle.C.h-rectangle.D.h)/(rectangle.C.w-rectangle.D.w);
+
+
+    RasterDataOutput.RectangleFirstTopGradient=(rectangle.B.h-rectangle.A.h)/(rectangle.B.w-rectangle.A.w);
+    RasterDataOutput.RectangleSecondTopGradient=(rectangle.C.h-rectangle.B.h)/(rectangle.C.w-rectangle.B.w);
+    
+    RasterDataOutput.RectangleFirstBottomY =  rectangle.A.h + RasterDataOutput.RectangleFirstBottomGradient * (ceil(rectangle.A.w) - rectangle.A.w);
+    RasterDataOutput.RectangleSecondBottomY =  rectangle.D.h + RasterDataOutput.RectangleSecondBottomGradient * (ceil(rectangle.D.w) - rectangle.D.w);
+    
+    RasterDataOutput.RectangleFirstTopY = rectangle.A.h + RasterDataOutput.RectangleFirstTopGradient * (ceil(rectangle.A.w) - rectangle.A.w);
+    RasterDataOutput.RectangleSecondTopY = rectangle.B.h + RasterDataOutput.RectangleSecondTopGradient * (ceil(rectangle.B.w) - rectangle.B.w);
+    
+    
+    return(RasterDataOutput);
+}
 
 
 
