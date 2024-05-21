@@ -8,8 +8,9 @@
 #include "SpeeduinoGL.h"
 
 
+//if you want to get a higher framerate by offloading frame collection to M4 core see;
+// https://forum.arduino.cc/t/a-code-that-lets-you-zoom-into-rotate-and-move-a-camera-feed-on-giga-r1/1192843
 
-// This example only works with Greyscale cameras (due to the palette + resize&rotate algo)
 #define ARDUCAM_CAMERA_GC2145
 
 #ifdef ARDUCAM_CAMERA_HM01B0
