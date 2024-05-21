@@ -415,23 +415,24 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
 
 
 void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uint16_t Colour) {
-//you might see !(Past.RectangleBottomX <= 0), yes its weird but it seems for some reason > for two signed numbers is currently broken for Giga R1 and causes issues when one number is negative.
+
     
     uint16_t* ImageBuffer = (uint16_t*)ImageAddress;
 
     
 
+
     if (Past.RectangleStartX < 0) {
         if (Past.RectangleEndX < 0) {
             goto returnpoint;
         } else {
-            if (!(Past.RectangleBottomX <= 0)) {
+            if (Past.RectangleBottomX > 0) {
         Past.RectangleFirstBottomY -= Past.RectangleFirstBottomGradient * Past.RectangleStartX;
             } else {
         Past.RectangleSecondBottomY -= Past.RectangleSecondBottomGradient * Past.RectangleBottomX;
                 Past.RectangleBottomX = 0;
             };
-            if (!(Past.RectangleTopX <= 0)) {
+            if (Past.RectangleTopX > 0) {
         Past.RectangleFirstTopY -= Past.RectangleFirstTopGradient * Past.RectangleStartX;
             } else {
         Past.RectangleSecondTopY -= Past.RectangleSecondTopGradient * Past.RectangleTopX;
@@ -442,15 +443,15 @@ void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uin
     };
     
     
-    if (!(Past.RectangleStartX <= New.RectangleStartX) && !(New.RectangleEndX <= Past.RectangleStartX)) {
+    if ((Past.RectangleStartX > New.RectangleStartX) && (New.RectangleEndX > Past.RectangleStartX)) {
 
-            if (!(New.RectangleBottomX <= Past.RectangleStartX)) {
+            if (New.RectangleBottomX > Past.RectangleStartX) {
         New.RectangleFirstBottomY -= New.RectangleFirstBottomGradient * (New.RectangleStartX-Past.RectangleStartX);
             } else {
         New.RectangleSecondBottomY -= New.RectangleSecondBottomGradient * (New.RectangleBottomX-Past.RectangleStartX);
                 New.RectangleBottomX = Past.RectangleStartX;
             };
-            if (!(New.RectangleTopX <= Past.RectangleStartX)) {
+            if (New.RectangleTopX > Past.RectangleStartX) {
         New.RectangleFirstTopY -= New.RectangleFirstTopGradient * (New.RectangleStartX-Past.RectangleStartX);
             } else {
         New.RectangleSecondTopY -= New.RectangleSecondTopGradient * (New.RectangleTopX-Past.RectangleStartX);
@@ -459,6 +460,7 @@ void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uin
             New.RectangleStartX = Past.RectangleStartX;
 
     };
+    
     
     
     if (New.RectangleStartX < Past.RectangleStartX) {
