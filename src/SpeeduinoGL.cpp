@@ -8,6 +8,7 @@ uint32_t ResH = 800;
 uint16_t InputSizeH = 240;
 uint16_t InputSizeV = 320;
 uint32_t CameraAddress = 1613300736;
+bool grayscale = 0;
 
 
   void ConfigBuffer(uint32_t Address, uint32_t ResolutionV, uint32_t ResolutionH) {
@@ -16,10 +17,11 @@ uint32_t CameraAddress = 1613300736;
     ResH = ResolutionH;
   }
 
-void ConfigInput(uint32_t Address, uint32_t ResolutionV, uint32_t ResolutionH ) {
+void ConfigInput(uint32_t Address, uint32_t ResolutionV, uint32_t ResolutionH, bool Grayscale) {
    InputSizeV = ResolutionV;
    CameraAddress = Address;
    InputSizeH = ResolutionH;
+   grayscale = Grayscale;
 }
 
 void FillScreen(uint16_t Colour) {
@@ -252,7 +254,9 @@ DoubleFloat TwoLineRasterizer(int32_t CellStartX, int32_t CellEndX, float Pointe
 
 void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) {
     
+    
       uint16_t* InputBuffer = (uint16_t*)CameraAddress;
+      uint8_t* InputBufferGray = (uint8_t*)CameraAddress;
 
       float gradient1 = cos(rotationRad);
       float gradient2 = sin(rotationRad);
@@ -316,24 +320,35 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
 
         for (int16_t PosV = 0; PosV < InputSizeV; PosV++) {
 
-          if (CellPointerH <= BoundEndH && CellPointerV <= BoundEndV && CellPointerH >= BoundStartH && CellPointerV >= BoundStartV) {
-            
-              BoundaryPassed = 1;
-              RowsPassed = 1;
-              
+            if (CellPointerH <= BoundEndH && CellPointerV <= BoundEndV && CellPointerH >= BoundStartH && CellPointerV >= BoundStartV) {
+                
+                BoundaryPassed = 1;
+                RowsPassed = 1;
+                
+                
+                Rectangle square = {
+                    { CellPointerH, CellPointerV },
+                    { CellPointerHU, CellPointerVU },
+                    { CellPointerH2, CellPointerV2 },
+                    { CellPointerHU2, CellPointerVU2 }
+                };
+                
+                
+    
+                uint16_t Colour;
+                if (grayscale) {
+                    Colour = InputBufferGray[InputSizeV * PosH + PosV];
+ 
+                        uint16_t red = (Colour >> 3) & 0x1F;
+                        uint16_t green = (Colour >> 2) & 0x3F;
+                        uint16_t blue = (Colour >> 3) & 0x1F;
+                        Colour = (red << 11) | (green << 5) | blue;
 
-            Rectangle square = {
-              { CellPointerH, CellPointerV },
-              { CellPointerHU, CellPointerVU },
-              { CellPointerH2, CellPointerV2 },
-              { CellPointerHU2, CellPointerVU2 }
-            };
-
-
-
-
-            uint16_t Colour = InputBuffer[InputSizeV * PosH + PosV];
-            Colour = (((Colour >> 8) & 0x00FF) | ((Colour << 8) & 0xFF00));
+                    
+                } else {
+                    Colour = InputBuffer[InputSizeV * PosH + PosV];
+                    Colour = (((Colour >> 8) & 0x00FF) | ((Colour << 8) & 0xFF00));
+                };
 
 
 
@@ -415,12 +430,11 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
 
 
 void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uint16_t Colour) {
-
+//you might see !(Past.RectangleBottomX <= 0), yes its weird but it seems for some reason > for two signed numbers is currently broken for Giga R1 and causes issues when one number is negative.
     
     uint16_t* ImageBuffer = (uint16_t*)ImageAddress;
 
     
-
 
     if (Past.RectangleStartX < 0) {
         if (Past.RectangleEndX < 0) {
@@ -460,7 +474,6 @@ void RectangleReplacement(RectangleRasterData Past, RectangleRasterData New, uin
             New.RectangleStartX = Past.RectangleStartX;
 
     };
-    
     
     
     if (New.RectangleStartX < Past.RectangleStartX) {

@@ -43,7 +43,7 @@ struct RectangleRasterData {
 
 
   void ConfigBuffer(uint32_t address = 0x60000000, uint32_t ResolutionV = 480, uint32_t ResolutionH = 800);
-  void ConfigInput(uint32_t address = 1613300736, uint32_t ResolutionV = 320, uint32_t ResolutionH = 240);
+  void ConfigInput(uint32_t address = 1613300736, uint32_t ResolutionV = 320, uint32_t ResolutionH = 240, bool Grayscale = 0);
   void FillTriangle(Triangle triangle, uint16_t Colour);
   void FillRectangle(Rectangle rectangle, uint16_t Colour);
 
