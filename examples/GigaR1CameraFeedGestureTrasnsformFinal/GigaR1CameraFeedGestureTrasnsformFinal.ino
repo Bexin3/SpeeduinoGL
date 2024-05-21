@@ -7,23 +7,42 @@
 #include "Arduino_GigaDisplayTouch.h"
 #include "SpeeduinoGL.h"
 
-// This example only works with Greyscale cameras (due to the palette + resize&rotate algo)
-#define ARDUCAM_CAMERA_OV767X
 
-#ifdef ARDUCAM_CAMERA_OV767X
+
+// This example only works with Greyscale cameras (due to the palette + resize&rotate algo)
+#define ARDUCAM_CAMERA_GC2145
+
+#ifdef ARDUCAM_CAMERA_HM01B0
+#include "Himax_HM01B0/himax.h"
+HM01B0 himax;
+Camera cam(himax);
+bool isgray = 1;
+float rotationinit = 0;
+#define IMAGE_MODE CAMERA_GRAYSCALE
+#elif defined(ARDUCAM_CAMERA_HM0360)
+#include "Himax_HM0360/hm0360.h"
+HM0360 himax;
+Camera cam(himax);
+bool isgray = 1;
+float rotationinit = PI/2;
+#define IMAGE_MODE CAMERA_GRAYSCALE
+#elif defined(ARDUCAM_CAMERA_OV767X)
 #include "OV7670/ov767x.h"
 // OV7670 ov767x;
-OV7670 ov767x;
+OV7675 ov767x;
 Camera cam(ov767x);
-float rotation = 0;
+bool isgray = 0;
+float rotationinit = 0;
 #define IMAGE_MODE CAMERA_RGB565
 #elif defined(ARDUCAM_CAMERA_GC2145)
 #include "GC2145/gc2145.h"
 GC2145 galaxyCore;
-float rotation = -PI/2;
 Camera cam(galaxyCore);
+bool isgray = 0;
+float rotationinit = -PI/2;
 #define IMAGE_MODE CAMERA_RGB565
 #endif
+
 
 int YValue = 480;
 // The buffer used to capture the frame
@@ -31,6 +50,7 @@ int YValue = 480;
 float zoom = 1;
 float shifti = 400; //Horizontal
 float shiftj = 240; //Vertical
+float rotation = 0;
 
 bool pause = 0;
 float SafetyPixels = 0.01;
@@ -74,10 +94,14 @@ uint32_t palette[256];
 
 void setup() {
 
+rotation=rotationinit;
+
+  ConfigInput(1613300736, resv, resh, isgray);
+
   //FrameReady = 00000000;
   SDRAM.begin();
 
-  if (!cam.begin(CAMERA_R320x240, IMAGE_MODE, 60)) {
+  if (!cam.begin(CAMERA_R320x240, IMAGE_MODE, 30)) {
   };
 
     testRast=GetRasterData(0, 0, 1, 0, 800, 480);
@@ -134,7 +158,7 @@ cam.grabFrame(fb, 3000);
 
 
 if(zoom>0.5) {
-
+testRast = GetRasterData(0, 0, 1, 0, 800, 480);
   for (int i = 0; i < 800; i++) {
 
     for (int j = 0; j < 480; j++) {
@@ -143,7 +167,19 @@ if(zoom>0.5) {
       int pc2 = (nearestj + (nearesti)*resv);
       int pc = j + ((i)) * 480;
       if (nearesti < resh/2 && nearestj < resv/2 && nearesti > -resh/2 && nearestj > -resv/2) {
+
+        if (isgray) {
+                  uint16_t Colour = ((uint8_t*)fb.getBuffer())[pc2 + resh*resv/2 + resv/2];
+ 
+                        uint16_t red = (Colour >> 3) & 0x1F;
+                        uint16_t green = (Colour >> 2) & 0x3F;
+                        uint16_t blue = (Colour >> 3) & 0x1F;
+                        ((uint16_t*)outfb.getBuffer())[pc] = (red << 11) | (green << 5) | blue;
+
+        } else {
         ((uint16_t*)outfb.getBuffer())[pc] = HTONS(((uint16_t*)fb.getBuffer())[pc2 + resh*resv/2 + resv/2]);
+        };
+
       } else {
         ((uint16_t*)outfb.getBuffer())[pc] = 0x0986;
       };
@@ -165,8 +201,8 @@ if(zoom>0.5) {
   float c4 = shifti;
 
     // Rotate the offset back to get the original camera origin position
-    float cameraOriginX = (c1*c1*c4 - 120*c1 + c2*(c2*c4 + 160))/(c1*c1 + c2*c2);
-    float cameraOriginY = (c1*c1*c3 - 160*c1 + c2*(c2*c3 - 120))/(c1*c1 + c2*c2);
+    float cameraOriginX = (c1*c1*c4 - resh/2*c1 + c2*(c2*c4 + resv/2))/(c1*c1 + c2*c2);
+    float cameraOriginY = (c1*c1*c3 - resv/2*c1 + c2*(c2*c3 - resh/2))/(c1*c1 + c2*c2);
 
 
 testRast2 = GetRasterData(cameraOriginX+SafetyPixels*(cos(rotation)-sin(rotation))/zoom, cameraOriginY+SafetyPixels*(cos(rotation)+sin(rotation))/zoom, 1/zoom, rotation, ResH-2*SafetyPixels, ResV-2*SafetyPixels); //The factor added is due to FP inaccuracies
@@ -260,7 +296,7 @@ if (contacts == 2 && PreviousContacts == 2) {
     
 if (contacts == 3 && PreviousContacts == 3) {
 zoom = 1;
-rotation = 0;
+rotation = rotationinit;
 shifti = 400; //Horizontal
 shiftj = 240; //Vertical
 };
