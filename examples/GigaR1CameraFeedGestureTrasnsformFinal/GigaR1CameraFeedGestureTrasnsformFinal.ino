@@ -15,13 +15,20 @@
 // OV7670 ov767x;
 OV7670 ov767x;
 Camera cam(ov767x);
+float rotation = 0;
+#define IMAGE_MODE CAMERA_RGB565
+#elif defined(ARDUCAM_CAMERA_GC2145)
+#include "GC2145/gc2145.h"
+GC2145 galaxyCore;
+float rotation = -PI/2;
+Camera cam(galaxyCore);
 #define IMAGE_MODE CAMERA_RGB565
 #endif
+
 int YValue = 480;
 // The buffer used to capture the frame
 //FrameBuffer fb(SDRAM_START_ADDRESS);
 float zoom = 1;
-float rotation = 0;
 float shifti = 400; //Horizontal
 float shiftj = 240; //Vertical
 
