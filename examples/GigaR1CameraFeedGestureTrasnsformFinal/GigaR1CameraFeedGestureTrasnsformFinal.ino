@@ -126,7 +126,7 @@ cam.grabFrame(fb, 3000);
 
 
 
-if(zoom>0.2) {
+if(zoom>0.5) {
 
   for (int i = 0; i < 800; i++) {
 
