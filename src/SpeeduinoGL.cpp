@@ -236,8 +236,8 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
     float HShift = zoom * gradient2;
     float VShift = zoom * gradient1;
 
-    gradient1 = std::abs(gradient1);
-    gradient2 = std::abs(gradient2);
+    gradient1 = abs(gradient1);
+    gradient2 = abs(gradient2);
 
     float grad1;
     float grad2;
@@ -260,10 +260,10 @@ void TransferSquares(float ShiftH, float ShiftV, float zoom, float rotationRad) 
     float CellPointerH = ShiftH;
     float CellPointerV = ShiftV;
 
-    const float BoundStartH = 0 - zoom - std::abs(VShift);
-    const float BoundStartV = 0 - zoom - std::abs(HShift);
-    const float BoundEndH = ResH + zoom + std::abs(VShift);
-    const float BoundEndV = ResV + zoom + std::abs(HShift);
+    const float BoundStartH = 0 - zoom - abs(VShift);
+    const float BoundStartV = 0 - zoom - abs(HShift);
+    const float BoundEndH = ResH + zoom + abs(VShift);
+    const float BoundEndV = ResV + zoom + abs(HShift);
 
     bool RowsPassed = 0;
 
